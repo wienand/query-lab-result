@@ -23,6 +23,7 @@ app = Flask(__name__, static_folder='static', static_url_path='')
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['PBKDF2_ROUNDS'] = 400000
+app.config['PBKDF2_HASH_FUNCTION'] = 'sha256'
 app.config['TOKEN_LIFETIME_IN_SECONDS'] = 30 * 60
 app.config.from_envvar('SSR_SETTINGS')
 db = flask_sqlalchemy.SQLAlchemy(app)
@@ -49,6 +50,16 @@ class Result(db.Model):
 
     def __repr__(self):
         return '%s: %s (%s)' % (self.hash, self.result, self.comment)
+
+    @classmethod
+    def get_or_create(cls, ident, result, comment=None):
+        hash_value = b'0' + hashlib.pbkdf2_hmac(app.config['PBKDF2_HASH_FUNCTION'], ident.encode(), app.config['PEPPER'], app.config['PBKDF2_ROUNDS'])
+        entry = cls.query.get(hash_value)
+        if entry is None:
+            entry = cls(hash=hash_value, result=result, comment=comment)
+            db.session.add(entry)
+        entry.ident = ident
+        return entry
 
 
 class Token(db.Model):
@@ -156,7 +167,7 @@ def route_query():
             token_expired = True
         else:
             token.used += 1
-            result = Result.query.get(b'0' + hashlib.pbkdf2_hmac('sha256', form.code.data.strip().upper().encode(), app.config['PEPPER'], app.config['PBKDF2_ROUNDS']))
+            result = Result.query.get(b'0' + hashlib.pbkdf2_hmac(app.config['PBKDF2_HASH_FUNCTION'], form.code.data.strip().upper().encode(), app.config['PEPPER'], app.config['PBKDF2_ROUNDS']))
             if result:
                 db.session.add(Access(token=token.token, Result=result))
                 logging.info('Providing result with hash %s and token %s', result.hash, token)
