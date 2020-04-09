@@ -1,3 +1,4 @@
+import base64
 import datetime
 import hashlib
 import logging
@@ -12,7 +13,8 @@ import sqlalchemy as sa
 import validate_email
 import waitress
 import wtforms
-from flask import Flask, render_template, redirect, request
+from flask import Flask, render_template, redirect, request, jsonify
+from werkzeug.exceptions import Forbidden
 
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s %(levelname)s %(message)s', filename='server.log')
 streamHandler = logging.StreamHandler()
@@ -25,6 +27,7 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['PBKDF2_ROUNDS'] = 400000
 app.config['PBKDF2_HASH_FUNCTION'] = 'sha256'
 app.config['TOKEN_LIFETIME_IN_SECONDS'] = 30 * 60
+app.config['API_KEY'] = []
 app.config.from_envvar('SSR_SETTINGS')
 db = flask_sqlalchemy.SQLAlchemy(app)
 max_total_query_requests = app.config.get('MAX_TOTAL_QUERIES', 10000)
@@ -48,15 +51,20 @@ class Result(db.Model):
     result = sa.Column(sa.types.UnicodeText)
     comment = sa.Column(sa.types.UnicodeText)
 
+    # TODO: Visibility after a certain time since the last update
+    # visible_from = sa.Column(sa.types.DateTime)
+
     def __repr__(self):
         return '%s: %s (%s)' % (self.hash, self.result, self.comment)
 
     @classmethod
-    def get_or_create(cls, ident, result, comment=None):
-        hash_value = b'0' + hashlib.pbkdf2_hmac(app.config['PBKDF2_HASH_FUNCTION'], ident.encode(), app.config['PEPPER'], app.config['PBKDF2_ROUNDS'])
+    def get_or_create(cls, ident=None, result=None, comment=None, visible_from=None, hash_value=None):
+        if hash_value is None:
+            hash_value = b'0' + hashlib.pbkdf2_hmac(app.config['PBKDF2_HASH_FUNCTION'], ident.encode(), app.config['PEPPER'], app.config['PBKDF2_ROUNDS'])
         entry = cls.query.get(hash_value)
         if entry is None:
             entry = cls(hash=hash_value, result=result, comment=comment)
+            # TODO: visible_from=visible_from)
             db.session.add(entry)
         entry.ident = ident
         return entry
@@ -181,7 +189,23 @@ def route_query():
     return render_template('query.html', form=form, token_expired=token_expired)
 
 
+@app.route('/import', methods=['POST'])
+def route_import():
+    data = request.get_json()
+    if data['API_KEY'] not in app.config['API_KEYS']:
+        raise Forbidden()
+    for row in data['ROWS']:
+        row['hash_value'] = base64.b64decode(row['hash_value'])
+        entry = Result.get_or_create(**row)
+        logging.debug('Importing row with hash: %s', entry.hash)
+    logging.debug('Create or update %s rows ...', len(data['ROWS']))
+    db.session.commit()
+    return jsonify(STATUS='OK')
+
+
 db.create_all()
 
 if __name__ == '__main__':
     waitress.serve(app, host='127.0.0.1', port=5000 if len(sys.argv) < 2 else int(sys.argv[1]))
+
+# TODO: QR code to scan code
