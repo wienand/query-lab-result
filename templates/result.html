@@ -1,0 +1,64 @@
+{% extends "index.html" %}
+
+{% block main %}
+    <div class="hero-body">
+        <div class="container has-text-centered">
+            <div class="column is-6 is-offset-3">
+                <h1 class="title">
+                    Laborergebnis SARS-CoV-2
+                </h1>
+                <div class="box">
+                    <div class="field">
+                        {% if result and result.result.lower() == 'positiv' %}
+                            <h3 class="title_alt is-3">Ihr Ergebnis: <b>POSITIV</b></h3>
+                            <p></p>
+                            <div class="content notification is-danger">
+                                Sie sind mit dem SARS-CoV-2 Virus infiziert. Es erfolgt eine Meldung an das Gesundheitsamt. Bitte folgen Sie unbedingt den <a href="https://coronavirus.stuttgart.de/#portlet_5e623a4795527" target="_blank">Anweisungen des Gesundheitsamtes</a>:
+                                <ol style="text-align: left">
+                                    <li>Kontaktieren Sie bitte Ihr örtliches Gesundheitsamt <a href="https://tools.rki.de/PLZTool" target="_blank">https://&#8203;tools.rki.de/&#8203;PLZTool</a></li>
+                                    <li>Informieren Sie Ihre Kontaktpersonen und ggf. Ihren Arbeitgeber</li>
+                                    <li>Quarantäne und Hygiene einhalten <a href="http://multimedia.gsb.bund.de/RKI/Flowcharts/covid19-quarantaene" target="_blank">http://&#8203;multimedia.gsb.bund.de/&#8203;RKI/&#8203;Flowcharts/&#8203;covid19-quarantaene</a></li>
+                                </ol>
+                            </div>
+                        {% elif False %}
+                            <p>
+                                Sie werden unter der von Ihnen angegebenen Telefonnummer durch uns zur Klärung des
+                                weiteren Vorgehens angerufen. Zur Kontrolle finden Sie die Telefonnummern im Kurzbrief Fieberambulanz,
+                                den bei Abnahme des Abstriches erhalten haben.
+                            </p>
+                        {% elif result and result.result.lower() == 'negativ' %}
+                            <h3 class="title_alt is-3">Ihr Ergebnis: <b>NEGATIV</b></h3>
+                            <p></p>
+                            <div class="content notification is-primary">
+                                <p>
+                                    In Ihrem Abstrich konnten keine SARS-CoV-2 Viren nachgewiesen werden. Bitte beachten Sie, dass eine Infektion
+                                    trotzdem möglich ist und beachten Sie die ausgehändigten Hinweise zur Kontaktvermeidung.
+                                </p>
+                                <p>
+                                    Weiter Informationen des Gesundheitsamtes unter <a href="https://coronavirus.stuttgart.de">coronavirus.stuttgart.de></a>
+                                    und des RKI unter <a href="https://www.rki.de/covid-19">rki.de/covid-19</a>.
+                                </p>
+                            </div>
+                        {% else %}
+                            <h3 class="title_alt is-3">Ihr Ergebnis: <b>nicht gefunden</b></h3>
+                            <p></p>
+                            <div class="content notification is-danger">
+                                Es wurde kein Testergebnis gefunden. Entweder liegt das Ergebnis noch nicht vor oder die Identifikation des Abstrichs
+                                ist falsch. Bitte beachten Sie, dass mit einem Email/SMS-Code nur <b>drei Abfrageversuche</b> möglich sind.
+                            </div>
+                            <div class="content">
+                                <a class="button is-info" href="query">
+                                    Erneut versuchen
+                                </a>
+                            </div>
+                        {% endif %}
+                        <div class="notification">
+                            Bitte überprüfen Sie zur Ihrer Sicherheit nochmals den Abfragecode:<br>
+                            <b>{{ code }}</b>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

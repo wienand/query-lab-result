@@ -1,0 +1,7 @@
+validate_email
+waitress
+sqlalchemy
+flask
+flask-sqlalchemy
+flask_wtf
+wtforms

@@ -1,0 +1,66 @@
+{% extends "index.html" %}
+
+{% block main %}
+    <div class="hero-body">
+        <div class="container has-text-centered">
+            <div class="column is-6 is-offset-3">
+                <h1 class="title">
+                    Abfrage Laborergebnis SARS-CoV-2
+                </h1>
+                <h2 class="subtitle">
+                    <p>
+                        Bitte nutzen Sie den Code, welchen Sie per Email oder SMS erhalten haben, und den Code vom Kurzbrief
+                        <!--(<a href="kurzbrief-code.jpg" target="_blank">Beispiel</a>)--> aus der Fieberambulanz bzw. die Auftragsnummer für Mitarbeiter.
+                    </p>
+                </h2>
+                <div class="box">
+                    <form method="POST">
+                        <div class="field">
+                            <label class="label">Code aus Kurzbrief Fieberambulanz / Auftragsnummer</label>
+                            <p class="control is-expanded">
+                                {{ form.code(class='input', placeholder='6F9619FF-8B86-D011-B42D-00C04FC964FF', maxlength='36', required='') }}
+                            </p>
+                        </div>
+                        {% if form.errors %}
+
+                            <div class="notification is-danger">
+                                Bitte überprüfen Sie die Eingabe des Codes aus dem Kurzbrief.
+                            </div>
+                        {% endif %}
+                        <div class="field">
+                            <label class="label">Abfragecode aus SMS oder Email</label>
+                            <p class="control is-expanded">
+                                {{ form.token(class='input', placeholder='LQ-A4H6-4F5G-H4FE', maxlength='17', required='') }}
+                            </p>
+                        </div>
+                        {% if form.errors %}
+                            <div class="notification is-danger">
+                                Bitte überprüfen Sie die Eingabe des Codes aus der SMS oder Email.
+                            </div>
+                        {% elif token_expired %}
+                            <div class="notification is-danger">
+                                <p>
+                                    Abfragecodes sind nur 30 min gültig und es können maximal drei Versuche
+                                    mit einem Code durchgeführt werden.
+                                </p>
+                                <div class="field is-grouped">
+                                    <p class="control" style="width:100%">
+                                        <a class="button is-info" style="width:100%" href="/">Neuen Code anfordern</a>
+                                    </p>
+                                </div>
+                            </div>
+                        {% endif %}
+                        <div class="field is-grouped">
+                            <p class="control" style="width:100%">
+                                <button class="button is-info" style="width:100%" type="submit">
+                                    Ergebnis abfragen
+                                </button>
+                            </p>
+                        </div>
+                        {{ form.hidden_tag() }}
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Laborergebnisabfrage - Klinikum Stuttgart</title>
+    <link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+    <!-- Bulma Version 0.8.x-->
+    <link rel="stylesheet" href="https://unpkg.com/bulma@0.8.0/css/bulma.min.css"/>
+    <link rel="stylesheet" type="text/css" href="index.css">
+    {% block head %}{% endblock %}
+    <!-- Template from https://bulmatemplates.github.io/bulma-templates/ (MIT License) -->
+</head>
+
+<body>
+<section class="hero is-info is-fullheight">
+    <div class="hero-head">
+        <nav class="navbar">
+            <div class="container">
+                <div id="navbarMenu" class="navbar-menu">
+                    <div class="navbar-end">
+                            <span class="navbar-item">
+                                <a class="button is-white is-outlined" href="https://www.klinikum-stuttgart.de/" target="_blank">
+                                    <span class="icon">
+                                        <i class="fa fa-home"></i>
+                                    </span>
+                                    <span>Klinikum Stuttgart</span>
+                                </a>
+                            </span>
+                        <span class="navbar-item">
+                                <a class="button is-white is-outlined" href="https://www.rki.de/DE/Content/InfAZ/N/Neuartiges_Coronavirus/nCoV_node.html" target="_blank">
+                                    <span class="icon">
+                                        <i class="fa fa-superpowers"></i>
+                                    </span>
+                                    <span>Information zu Covid-19</span>
+                                </a>
+                            </span>
+                        <span class="navbar-item">
+                                <a class="button is-white is-outlined" href="#help">
+                                    <span class="icon">
+                                        <i class="fa fa-book"></i>
+                                    </span>
+                                    <span>Hilfe</span>
+                                </a>
+                            </span>
+                        <span class="navbar-item">
+                                <a class="button is-white is-outlined" href="https://github.com/wienand/query-lab-result" target="_blank">
+                                    <span class="icon">
+                                        <i class="fa fa-github"></i>
+                                    </span>
+                                    <span>View Source</span>
+                                </a>
+                            </span>
+                    </div>
+                </div>
+            </div>
+        </nav>
+    </div>
+    {% block main %}
+        <div class="hero-body">
+            <div class="container has-text-centered">
+                <div class="column is-6 is-offset-3">
+                    <h1 class="title">
+                        Abfrage Laborergebnis SARS-CoV-2
+                    </h1>
+                    <h2 class="subtitle">
+                        <p>
+                            Sie benötigen zur Abfrage eine Emailadresse oder ein Mobiltelefon und den Kurzbrief Fieberambulanz, den Sie bei
+                            der Abnahme des Abstriches erhalten haben.
+                        </p>
+                    </h2>
+                    <div class="box">
+                        <form method="POST">
+                            <div class="field is-grouped is-grouped-multiline is-grouped-right">
+                                <p class="control is-expanded">
+                                    {{ form.email_or_mobile(class='input', placeholder='Bitte Emailadresse oder Mobilfunknummer eingeben ...', required='') }}
+                                </p>
+                                <p class="control">
+                                    <button class="button is-info">
+                                        Abfragecode zusenden
+                                    </button>
+                                </p>
+                            </div>
+                            {% if form.errors or form.email_or_mobile.data %}
+                                <div class="notification is-danger">
+                                    Bitte überprüfen Sie die Eingabe der Emailadresse oder Telefonnummer.
+                                </div>
+                            {% endif %}
+                            <a href="query">Ich habe bereits einen Abfragecode per Email oder SMS erhalten</a>
+                            {{ form.hidden_tag() }}
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endblock %}
+</section>
+
+<footer class="footer" id="help" style="padding-top: 24px; padding-bottom: 24px">
+    <div class="content has-text-centered">
+        <p>
+            Bei Fragen oder Problemen wenden Sie sich bitte an
+            <a mailto="laborergebnisse@klinikum-stuttgart.de">laborergebnisse@klinikum-stuttgart.de</a>.
+        </p>
+        <p>
+            <strong>Built with and a lot of thanks to </strong>
+            <a target="_blank" href="https://python.org">python</a>,
+            <a target="_blank" href="https://flask.palletsprojects.com">flask</a>,
+            <a target="_blank" href="https://www.sqlalchemy.org">sqlalchemy</a>,
+            <a target="_blank" href="https://www.sqlite.org">sqlite</a>,
+            <a target="_blank" href="https://flask-sqlalchemy.palletsprojects.com">flask-sqlalchemy</a>,
+            <a target="_blank" href="https://fontawesome.com">font awesome</a>,
+            <a target="_blank" href="https://bulma.io">bulma.io</a> and
+            <a target="_blank" href="https://bulmatemplates.github.io/bulma-templates">free bulma templates</a>.
+        </p>
+        <p>
+            <a target="_blank" href="https://www.klinikum-stuttgart.de/impressum/">Impressum</a> /
+            <a target="_blank" href="https://www.klinikum-stuttgart.de/datenschutz/">Datenschutz</a>
+        </p>
+    </div>
+</footer>
+</body>
+{% block after_body %}{% endblock %}
+</html>
