@@ -188,7 +188,7 @@ def route_query():
             else:
                 logging.warning('No result found with %s and token %s', code_input, token)
             db.session.commit()
-            return render_template('result.html', result=result, code=form.code.data.strip())
+            return render_template('result.html', result=result, code=code_input, code_input=form.code.data.strip())
     else:
         logging.debug('Form not validated code: %s and token: %s', form.code.data, form.token.data)
     return render_template('query.html', form=form, token_expired=token_expired, token_not_found=token_not_found)

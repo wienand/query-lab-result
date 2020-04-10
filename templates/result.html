@@ -55,6 +55,9 @@
                         {% endif %}
                         <div class="notification">
                             Bitte überprüfen Sie zur Ihrer Sicherheit nochmals den Abfragecode:<br>
+                            {% if code and code_input and code.lower() != code_input.lower() %}
+                                {{ code_input }} entspricht intern
+                            {% endif %}
                             <b>{{ code }}</b>
                         </div>
                     </div>
