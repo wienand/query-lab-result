@@ -19,7 +19,7 @@
                                 {{ form.code(class='input', placeholder='6F9619FF-8B86-D011-B42D-00C04FC964FF', maxlength='36', required='') }}
                             </p>
                         </div>
-                        {% if form.errors %}
+                        {% if token_not_found or form.code.errors %}
 
                             <div class="notification is-danger">
                                 Bitte überprüfen Sie die Eingabe des Codes aus dem Kurzbrief.
@@ -31,7 +31,7 @@
                                 {{ form.token(class='input', placeholder='LQ-A4H6-4F5G-H4FE', maxlength='17', required='') }}
                             </p>
                         </div>
-                        {% if form.errors %}
+                        {% if token_not_found or form.token.errors %}
                             <div class="notification is-danger">
                                 Bitte überprüfen Sie die Eingabe des Codes aus der SMS oder Email.
                             </div>

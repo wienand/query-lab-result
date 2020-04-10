@@ -3,6 +3,7 @@ import datetime
 import hashlib
 import logging
 import logging.handlers
+import re
 import secrets
 import smtplib
 import sys
@@ -27,6 +28,7 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['PBKDF2_ROUNDS'] = 400000
 app.config['PBKDF2_HASH_FUNCTION'] = 'sha256'
 app.config['TOKEN_LIFETIME_IN_SECONDS'] = 30 * 60
+app.config['CODE_REGEXP'] = '.*'
 app.config['API_KEY'] = []
 app.config.from_envvar('SSR_SETTINGS')
 db = flask_sqlalchemy.SQLAlchemy(app)
@@ -123,8 +125,8 @@ class RequestTokenForm(flask_wtf.FlaskForm):
 
 
 class RequestResultForm(flask_wtf.FlaskForm):
-    code = wtforms.StringField('code', validators=[wtforms.validators.regexp(r'^([A-Za-z0-9-]{36})|(\d{8})$')])
-    token = wtforms.StringField('token', validators=[wtforms.validators.regexp('^LQ-[ABCDEFGHJKLMNPQRSTUVWXYZ23456789]{4}-[ABCDEFGHJKLMNPQRSTUVWXYZ23456789]{4}-[ABCDEFGHJKLMNPQRSTUVWXYZ23456789]{4}$')])
+    code = wtforms.StringField('code', validators=[wtforms.validators.regexp(app.config['CODE_REGEXP'], flags=re.IGNORECASE)])
+    token = wtforms.StringField('token', validators=[wtforms.validators.regexp('^ *LQ-[ABCDEFGHJKLMNPQRSTUVWXYZ23456789]{4}-[ABCDEFGHJKLMNPQRSTUVWXYZ23456789]{4}-[ABCDEFGHJKLMNPQRSTUVWXYZ23456789]{4} *$', flags=re.IGNORECASE)])
 
 
 @app.route('/', methods=['GET', 'POST'])
@@ -159,34 +161,37 @@ def route_query():
     global max_total_query_requests
     form = RequestResultForm(request.form or request.args)
     token_expired = False
-    logging.debug('Trying to access result %s with %s', form.code.data, form.token.data)
-    if form.validate():
+    token_not_found = False
+    if form.validate_on_submit():
+        logging.debug('Form validated, trying to access result %s with %s', form.code.data, form.token.data)
         if not max_total_query_requests:
             logging.error('Maximal number of query requests exhausted!')
             raise Exception('Maximal number of query requests exhausted!')
         max_total_query_requests -= 1
-
         token = Token.query.get(form.token.data.strip())
         if not token:
             logging.warning('Invalid token for result %s with %s: %s', form.code.data, form.token.data, token)
-            form.errors['extra'] = 'Invalid token'
+            token_not_found = 'Invalid token'
         elif token.used > 2 or (datetime.datetime.utcnow() - token.created_at).total_seconds() > app.config['TOKEN_LIFETIME_IN_SECONDS']:
             logging.warning('Token expired for result %s with %s: %s', form.code.data, form.token.data, token)
             token_expired = True
         else:
             token.used += 1
-            result = Result.query.get(b'0' + hashlib.pbkdf2_hmac(app.config['PBKDF2_HASH_FUNCTION'], form.code.data.strip().upper().encode(), app.config['PEPPER'], app.config['PBKDF2_ROUNDS']))
+            # TODO: Move to configuration prior to commit
+            code_input = form.code.data
+            if 'CODE_CLEANUP' in app.config:
+                code_input = app.config['CODE_CLEANUP'](code_input)
+            result = Result.query.get(b'0' + hashlib.pbkdf2_hmac(app.config['PBKDF2_HASH_FUNCTION'], code_input.encode(), app.config['PEPPER'], app.config['PBKDF2_ROUNDS']))
             if result:
                 db.session.add(Access(token=token.token, Result=result))
                 logging.info('Providing result with hash %s and token %s', result.hash, token)
             else:
-                logging.warning('No result found with %s and token %s', form.code.data, token)
+                logging.warning('No result found with %s and token %s', code_input, token)
             db.session.commit()
             return render_template('result.html', result=result, code=form.code.data.strip())
-    if not request.form:
-        while form.errors:
-            form.errors.popitem()
-    return render_template('query.html', form=form, token_expired=token_expired)
+    else:
+        logging.debug('Form not validated code: %s and token: %s', form.code.data, form.token.data)
+    return render_template('query.html', form=form, token_expired=token_expired, token_not_found=token_not_found)
 
 
 @app.route('/import', methods=['POST'])
