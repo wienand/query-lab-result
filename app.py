@@ -27,7 +27,7 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['PBKDF2_ROUNDS'] = 400000
 app.config['PBKDF2_HASH_FUNCTION'] = 'sha256'
-app.config['TOKEN_LIFETIME_IN_SECONDS'] = 30 * 60
+app.config['TOKEN_LIFETIME_IN_SECONDS'] = 35 * 60
 app.config['CODE_REGEXP'] = '.*'
 app.config['API_KEY'] = []
 app.config.from_envvar('SSR_SETTINGS')
