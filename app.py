@@ -60,14 +60,17 @@ class Result(db.Model):
         return '%s: %s (%s)' % (self.hash, self.result, self.comment)
 
     @classmethod
-    def get_or_create(cls, ident=None, result=None, comment=None, visible_from=None, hash_value=None):
+    def get_or_create(cls, ident=None, result=None, comment=None, visible_from=None, hash_value=None, **kwargs):
         if hash_value is None:
             hash_value = b'0' + hashlib.pbkdf2_hmac(app.config['PBKDF2_HASH_FUNCTION'], ident.encode(), app.config['PEPPER'], app.config['PBKDF2_ROUNDS'])
         entry = cls.query.get(hash_value)
         if entry is None:
             entry = cls(hash=hash_value, result=result, comment=comment)
             # TODO: visible_from=visible_from)
+            entry.created = True
             db.session.add(entry)
+        else:
+            entry.created = False
         entry.ident = ident
         return entry
 
@@ -93,6 +96,13 @@ class Access(db.Model):
     Result = db.relationship('Result', backref=db.backref('Access', lazy=True))
 
 
+def normalize_phone_number(phone_number):
+    if phone_number.startswith('00'):
+        return '+' + phone_number[2:]
+    if phone_number.startswith('0'):
+        return '+49' + phone_number[1:]
+
+
 def generate_token():
     characters_for_token = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
     # noinspection PyUnusedLocal
@@ -100,24 +110,19 @@ def generate_token():
     return 'LQ-' + token[0:4] + '-' + token[4:8] + '-' + token[8:12]
 
 
-def send_email(recipient, token):
-    message = app.config['SMTP_TOKEN_TEMPLATE']
+def send_token_email(recipient, token):
+    message = app.config['SMTP_TOKEN_TEMPLATE'].format(sender=app.config['SMTP_FROM'], base_url=app.config['BASE_URL'], to=recipient, token=token)
 
     with smtplib.SMTP(app.config['SMTP_HOST']) as smtp:
-        smtp.sendmail(app.config['SMTP_FROM'], [recipient] + app.config.get('SMTP_BCC', []),
-                      message % (app.config['SMTP_FROM'], recipient, token, app.config['BASE_URL'], token))
+        smtp.sendmail(app.config['SMTP_FROM'], [recipient] + app.config.get('SMTP_BCC', []), message)
 
 
 def send_token_by_sms(phone_number, token):
-    if phone_number.startswith('00'):
-        phone_number = '+' + phone_number[2:]
-    if phone_number.startswith('0'):
-        phone_number = '+49' + phone_number[1:]
-    send_email(phone_number + app.config['SMS_GATEWAY_EMAIL'], token)
+    send_token_email(normalize_phone_number(phone_number) + app.config['SMS_GATEWAY_EMAIL'], token)
 
 
 def send_token_by_email(email, token):
-    send_email(email, token)
+    send_token_email(email, token)
 
 
 class RequestTokenForm(flask_wtf.FlaskForm):
@@ -176,7 +181,6 @@ def route_query():
             logging.warning('Token expired for result %s with %s: %s', form.code.data, form.token.data, token)
             token_expired = True
         else:
-            token.used += 1
             # TODO: Move to configuration prior to commit
             code_input = form.code.data
             if 'CODE_CLEANUP' in app.config:
@@ -187,6 +191,7 @@ def route_query():
                 logging.info('Providing result with hash %s and token %s', result.hash, token)
             else:
                 logging.warning('No result found with %s and token %s', code_input, token)
+            token.used += 1
             db.session.commit()
             return render_template('result.html', result=result, code=code_input, code_input=form.code.data.strip())
     else:
@@ -196,13 +201,20 @@ def route_query():
 
 @app.route('/import', methods=['POST'])
 def route_import():
-    data = request.get_json()
+    logging.debug("RD: %s", request.data)
+    data = request.get_json(force=True)
+    logging.debug("JSON: %s", data)
     if data['API_KEY'] not in app.config['API_KEYS']:
         raise Forbidden()
     for row in data['ROWS']:
-        row['hash_value'] = base64.b64decode(row['hash_value'])
+        if 'hash_value' in row:
+            row['hash_value'] = base64.b64decode(row['hash_value'])
         entry = Result.get_or_create(**row)
         logging.debug('Importing row with hash: %s', entry.hash)
+        for callback in app.config.get('IMPORT_POST_PROCESSING', []):
+            logging.debug('Executing callback %s', callback.__name__)
+            callback(row, entry)
+
     logging.debug('Create or update %s rows ...', len(data['ROWS']))
     db.session.commit()
     return jsonify(STATUS='OK')
