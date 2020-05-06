@@ -207,12 +207,16 @@ def route_import():
     if data['API_KEY'] not in app.config['API_KEYS']:
         raise Forbidden()
     for row in data['ROWS']:
+        for callback in app.config.get('IMPORT_PRE_PROCESSING', []):
+            logging.debug('Executing PRE callback %s', callback.__name__)
+            if callback(row) is False:
+                continue
         if 'hash_value' in row:
             row['hash_value'] = base64.b64decode(row['hash_value'])
         entry = Result.get_or_create(**row)
         logging.debug('Importing row with hash: %s', entry.hash)
         for callback in app.config.get('IMPORT_POST_PROCESSING', []):
-            logging.debug('Executing callback %s', callback.__name__)
+            logging.debug('Executing POST callback %s', callback.__name__)
             callback(row, entry)
 
     logging.debug('Create or update %s rows ...', len(data['ROWS']))

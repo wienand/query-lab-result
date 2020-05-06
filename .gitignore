@@ -127,10 +127,8 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
-/.git-*/
-/database.db
 
-/ixserv_document.xls
+# Data files
+/*.db
+/*.xls
 /archiv/
-/database - server.db
-/notification.db
