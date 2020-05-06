@@ -204,11 +204,10 @@ def route_import():
     data = request.get_json(force=True)
     if data['API_KEY'] not in app.config['API_KEYS']:
         raise Forbidden()
-    logging.debug('Create or update %s rows ...', len(data['ROWS']))
     for row in data['ROWS']:
         skip = False
         for callback in app.config.get('IMPORT_PRE_PROCESSING', []):
-            logging.debug('Executing PRE callback %s', callback.__name__)
+            logging.log(5, 'Executing PRE callback %s', callback.__name__)
             skip |= callback(row) is False
         if skip:
             continue
@@ -217,7 +216,7 @@ def route_import():
         entry = Result.get_or_create(**row)
         logging.debug('Importing row with hash: %s', entry.hash)
         for callback in app.config.get('IMPORT_POST_PROCESSING', []):
-            logging.debug('Executing POST callback %s', callback.__name__)
+            logging.log(5, 'Executing POST callback %s', callback.__name__)
             callback(row, entry)
 
     db.session.commit()
