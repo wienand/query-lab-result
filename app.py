@@ -201,16 +201,17 @@ def route_query():
 
 @app.route('/import', methods=['POST'])
 def route_import():
-    logging.debug("RD: %s", request.data)
     data = request.get_json(force=True)
-    logging.debug("JSON: %s", data)
     if data['API_KEY'] not in app.config['API_KEYS']:
         raise Forbidden()
+    logging.debug('Create or update %s rows ...', len(data['ROWS']))
     for row in data['ROWS']:
+        skip = False
         for callback in app.config.get('IMPORT_PRE_PROCESSING', []):
             logging.debug('Executing PRE callback %s', callback.__name__)
-            if callback(row) is False:
-                continue
+            skip |= callback(row) is False
+        if skip:
+            continue
         if 'hash_value' in row:
             row['hash_value'] = base64.b64decode(row['hash_value'])
         entry = Result.get_or_create(**row)
@@ -219,7 +220,6 @@ def route_import():
             logging.debug('Executing POST callback %s', callback.__name__)
             callback(row, entry)
 
-    logging.debug('Create or update %s rows ...', len(data['ROWS']))
     db.session.commit()
     return jsonify(STATUS='OK')
 
