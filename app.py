@@ -232,7 +232,7 @@ def route_import():
         skip = False
         for callback in app.config.get('IMPORT_PRE_PROCESSING', []):
             logging.log(5, 'Executing PRE callback %s', callback.__name__)
-            skip |= callback(row) is False
+            skip |= callback(row, data) is False
         if skip:
             continue
         if 'hash_value' in row:
@@ -241,7 +241,7 @@ def route_import():
         logging.debug('Importing row with hash: %s', entry.hash)
         for callback in app.config.get('IMPORT_POST_PROCESSING', []):
             logging.log(5, 'Executing POST callback %s', callback.__name__)
-            callback(row, entry)
+            callback(row, entry, data)
 
     db.session.commit()
     return jsonify(STATUS='OK')
