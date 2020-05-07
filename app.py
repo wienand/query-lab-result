@@ -47,9 +47,20 @@ if app.config.get('SMTP_ERROR_TO', False):
     ))
 
 
+class Observation(db.Model):
+    __tablename__ = 'observation'
+    hash = sa.Column(sa.types.LargeBinary, sa.ForeignKey('result.hash'), primary_key=True)
+    identifier = sa.Column(sa.types.UnicodeText, primary_key=True)
+    created_at = sa.Column(sa.types.DateTime, default=datetime.datetime.utcnow)
+    result = sa.Column(sa.types.UnicodeText)
+    comment = sa.Column(sa.types.UnicodeText)
+    Result = db.relationship('Result', backref=db.backref('Observations', lazy=False))
+
+
 class Result(db.Model):
     __tablename__ = 'result'
     hash = sa.Column(sa.types.LargeBinary, primary_key=True)
+    created_at = sa.Column(sa.types.DateTime, default=datetime.datetime.utcnow)
     result = sa.Column(sa.types.UnicodeText)
     comment = sa.Column(sa.types.UnicodeText)
 
@@ -60,19 +71,32 @@ class Result(db.Model):
         return '%s: %s (%s)' % (self.hash, self.result, self.comment)
 
     @classmethod
-    def get_or_create(cls, ident=None, result=None, comment=None, visible_from=None, hash_value=None, **kwargs):
+    def get_or_create(cls, ident=None, result=None, comment=None, hash_value=None, **_):
         if hash_value is None:
             hash_value = b'0' + hashlib.pbkdf2_hmac(app.config['PBKDF2_HASH_FUNCTION'], ident.encode(), app.config['PEPPER'], app.config['PBKDF2_ROUNDS'])
         entry = cls.query.get(hash_value)
         if entry is None:
-            entry = cls(hash=hash_value, result=result, comment=comment)
-            # TODO: visible_from=visible_from)
-            entry.created = True
+            entry = cls(hash=hash_value)
             db.session.add(entry)
+        if type(result) == list:
+            current_by_identifier = {x.identifier: x for x in entry.Observations}
+            for observation in result:
+                if observation['identifier'] in current_by_identifier:
+                    sub_entry = current_by_identifier[observation['identifier']]
+                else:
+                    sub_entry = Observation(Result=entry, identifier=observation['identifier'])
+                    db.session.add(sub_entry)
+                cls.update_entry(sub_entry, **observation)
         else:
-            entry.created = False
-        entry.ident = ident
+            cls.update_entry(entry, comment, result)
         return entry
+
+    @classmethod
+    def update_entry(cls, entry, comment, result, **_):
+        if result:
+            entry.result = result
+        if comment:
+            entry.comment = comment
 
 
 class Token(db.Model):
