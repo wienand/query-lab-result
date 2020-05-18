@@ -92,7 +92,7 @@ class Result(db.Model):
         return entry
 
     @classmethod
-    def update_entry(cls, entry, comment, result, **_):
+    def update_entry(cls, entry, comment=None, result=None, **_):
         if result:
             entry.result = result
         if comment:
@@ -217,7 +217,9 @@ def route_query():
                 logging.warning('No result found with %s and token %s', code_input, token)
             token.used += 1
             db.session.commit()
-            return render_template('result.html', result=result, code=code_input, code_input=form.code.data.strip())
+            observations = {x.identifier: x for x in result.Observations}
+            return render_template('result.html', result=result if result.result else observations.get('COV2PCE', None), observations=observations,
+                                   code=code_input, code_input=form.code.data.strip())
     else:
         logging.debug('Form not validated code: %s and token: %s', form.code.data, form.token.data)
     return render_template('query.html', form=form, token_expired=token_expired, token_not_found=token_not_found)
@@ -226,6 +228,7 @@ def route_query():
 @app.route('/import', methods=['POST'])
 def route_import():
     data = request.get_json(force=True)
+    logging.debug('JSON RCV: %s', data)
     if data['API_KEY'] not in app.config['API_KEYS']:
         raise Forbidden()
     for row in data['ROWS']:

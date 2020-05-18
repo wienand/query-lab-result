@@ -9,37 +9,49 @@
                 </h1>
                 <div class="box">
                     <div class="field">
-                        {% if result and result.result.lower() == 'positiv' %}
-                            <h3 class="title_alt is-3">Ihr Ergebnis: <b>POSITIV</b></h3>
-                            <p></p>
-                            <div class="content notification is-danger">
-                                Sie sind mit dem SARS-CoV-2 Virus infiziert. Es erfolgt eine Meldung an das Gesundheitsamt. Bitte folgen Sie unbedingt den <a href="https://coronavirus.stuttgart.de/#portlet_5e623a4795527" target="_blank">Anweisungen des Gesundheitsamtes</a>:
-                                <ol class="text-left">
-                                    <li>Kontaktieren Sie bitte Ihr örtliches Gesundheitsamt <a href="https://tools.rki.de" target="_blank">https://&#8203;tools.rki.de</a></li>
-                                    <li>Informieren Sie Ihre Kontaktpersonen und ggf. Ihren Arbeitgeber</li>
-                                    <li>Quarantäne und Hygiene einhalten <a href="http://multimedia.gsb.bund.de/RKI/Flowcharts/covid19-quarantaene" target="_blank">http://&#8203;multimedia.gsb.bund.de/&#8203;RKI/&#8203;Flowcharts/&#8203;covid19-quarantaene</a></li>
-                                </ol>
-                            </div>
-                        {% elif False %}
-                            <p>
-                                Sie werden unter der von Ihnen angegebenen Telefonnummer durch uns zur Klärung des
-                                weiteren Vorgehens angerufen. Zur Kontrolle finden Sie die Telefonnummern im Kurzbrief Fieberambulanz,
-                                den bei Abnahme des Abstriches erhalten haben.
-                            </p>
-                        {% elif result and result.result.lower() == 'negativ' %}
-                            <h3 class="title_alt is-3">Ihr Ergebnis: <b>NEGATIV</b></h3>
+                        {% if result %}
+                            {% if result.result.lower() == 'positiv' %}
+                                <h3 class="title_alt is-3">Virus-RNA (akut): <b>POSITIV</b></h3>
+                                <p></p>
+                                <div class="content notification is-danger">
+                                    Sie sind mit dem SARS-CoV-2 Virus infiziert. Es erfolgt eine Meldung an das Gesundheitsamt. Bitte folgen Sie unbedingt den <a href="https://coronavirus.stuttgart.de/#portlet_5e623a4795527" target="_blank">Anweisungen des Gesundheitsamtes</a>:
+                                    <ol class="text-left">
+                                        <li>Kontaktieren Sie bitte Ihr örtliches Gesundheitsamt <a href="https://tools.rki.de" target="_blank">https://&#8203;tools.rki.de</a></li>
+                                        <li>Informieren Sie Ihre Kontaktpersonen und ggf. Ihren Arbeitgeber</li>
+                                        <li>Quarantäne und Hygiene einhalten <a href="http://multimedia.gsb.bund.de/RKI/Flowcharts/covid19-quarantaene" target="_blank">http://&#8203;multimedia.gsb.bund.de/&#8203;RKI/&#8203;Flowcharts/&#8203;covid19-quarantaene</a></li>
+                                    </ol>
+                                </div>
+                            {% elif result.result.lower() == 'negativ' %}
+                                <h3 class="title_alt is-3">Virus-RNA (akut): <b>NEGATIV</b></h3>
+                                <p></p>
+                                <div class="content notification is-primary">
+                                    <p>
+                                        In Ihrem Abstrich konnten keine SARS-CoV-2 Viren nachgewiesen werden. Bitte beachten Sie, dass eine Infektion
+                                        trotzdem möglich ist und beachten Sie die ausgehändigten Hinweise zur Kontaktvermeidung.
+                                    </p>
+                                    <p>
+                                        Weiter Informationen des Gesundheitsamtes unter <a href="https://coronavirus.stuttgart.de">coronavirus.stuttgart.de</a>
+                                        und des RKI unter <a href="https://www.rki.de/covid-19">rki.de/covid-19</a>.
+                                    </p>
+                                </div>
+                            {% endif %}
+                        {% endif %}
+                        {% if observations and 'BEWCOV' in observations and 'SARS-CoV-2-Antikörper (IgG und IgA) negativ' in observations['BEWCOV'].comment %}
+                            <h3 class="title_alt is-3">Antikörper: <b>NEGATIV</b></h3>
                             <p></p>
                             <div class="content notification is-primary">
                                 <p>
-                                    In Ihrem Abstrich konnten keine SARS-CoV-2 Viren nachgewiesen werden. Bitte beachten Sie, dass eine Infektion
-                                    trotzdem möglich ist und beachten Sie die ausgehändigten Hinweise zur Kontaktvermeidung.
+                                    Es konnten keine IgA- und IgG-Antikörper gegen SARS-CoV-2 nachgewiesen werden.
+                                    Bitte beachten Sie, dass dies eine bestehende Infektion mit Covid-19 nicht ausschließt und folgen Sie weiterhin
+                                    den allgemeinen Hinweisen zur Kontaktvermeidung.
                                 </p>
                                 <p>
                                     Weiter Informationen des Gesundheitsamtes unter <a href="https://coronavirus.stuttgart.de">coronavirus.stuttgart.de</a>
                                     und des RKI unter <a href="https://www.rki.de/covid-19">rki.de/covid-19</a>.
                                 </p>
                             </div>
-                        {% else %}
+                        {% endif %}
+                        {% if (not result or result.result not in ['positiv', 'negativ']) and (not observations or 'BEWCOV' not in observations or 'SARS-CoV-2-Antikörper (IgG und IgA) negativ' not in observations.get('BEWCOV').comment) %}
                             <h3 class="title_alt is-3">Ihr Ergebnis: <b>nicht gefunden</b></h3>
                             <p></p>
                             <div class="content notification is-danger">
