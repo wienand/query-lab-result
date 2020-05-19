@@ -121,6 +121,8 @@ class Access(db.Model):
 
 
 def normalize_phone_number(phone_number):
+    if phone_number.startswith('+'):
+        return phone_number
     if phone_number.startswith('00'):
         return '+' + phone_number[2:]
     if phone_number.startswith('0'):
