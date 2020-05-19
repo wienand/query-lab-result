@@ -9,9 +9,9 @@
                 </h1>
                 <div class="box">
                     <div class="field">
-                        {% if result %}
-                            {% if result.result.lower() == 'positiv' %}
-                                <h3 class="title_alt is-3">Virus-RNA (akut): <b>POSITIV</b></h3>
+                        {% if result['PCR'] or result['AK']  %}
+                            {% if result['PCR'] == 'positiv' %}
+                                <h3 class="title_alt is-3">Virus-RNA (akut): <b>{{ result['PCR'].upper() }}</b></h3>
                                 <p></p>
                                 <div class="content notification is-danger">
                                     Sie sind mit dem SARS-CoV-2 Virus infiziert. Es erfolgt eine Meldung an das Gesundheitsamt. Bitte folgen Sie unbedingt den <a href="https://coronavirus.stuttgart.de/#portlet_5e623a4795527" target="_blank">Anweisungen des Gesundheitsamtes</a>:
@@ -21,8 +21,8 @@
                                         <li>Quarantäne und Hygiene einhalten <a href="http://multimedia.gsb.bund.de/RKI/Flowcharts/covid19-quarantaene" target="_blank">http://&#8203;multimedia.gsb.bund.de/&#8203;RKI/&#8203;Flowcharts/&#8203;covid19-quarantaene</a></li>
                                     </ol>
                                 </div>
-                            {% elif result.result.lower() == 'negativ' %}
-                                <h3 class="title_alt is-3">Virus-RNA (akut): <b>NEGATIV</b></h3>
+                            {% elif result['PCR'] == 'negativ' %}
+                                <h3 class="title_alt is-3">Virus-RNA (akut): <b>{{ result['PCR'].upper() }}</b></h3>
                                 <p></p>
                                 <div class="content notification is-primary">
                                     <p>
@@ -35,23 +35,59 @@
                                     </p>
                                 </div>
                             {% endif %}
-                        {% endif %}
-                        {% if observations and 'BEWCOV' in observations and 'SARS-CoV-2-Antikörper (IgG und IgA) negativ' in observations['BEWCOV'].comment %}
-                            <h3 class="title_alt is-3">Antikörper: <b>NEGATIV</b></h3>
-                            <p></p>
-                            <div class="content notification is-primary">
-                                <p>
-                                    Es konnten keine IgA- und IgG-Antikörper gegen SARS-CoV-2 nachgewiesen werden.
-                                    Bitte beachten Sie, dass dies eine bestehende Infektion mit Covid-19 nicht ausschließt und folgen Sie weiterhin
-                                    den allgemeinen Hinweisen zur Kontaktvermeidung.
-                                </p>
-                                <p>
-                                    Weiter Informationen des Gesundheitsamtes unter <a href="https://coronavirus.stuttgart.de">coronavirus.stuttgart.de</a>
-                                    und des RKI unter <a href="https://www.rki.de/covid-19">rki.de/covid-19</a>.
-                                </p>
-                            </div>
-                        {% endif %}
-                        {% if (not result or result.result not in ['positiv', 'negativ']) and (not observations or 'BEWCOV' not in observations or 'SARS-CoV-2-Antikörper (IgG und IgA) negativ' not in observations.get('BEWCOV').comment) %}
+                            {% if result['AK'] == 'positiv' %}
+                                <h3 class="title_alt is-3">Antikörper: <b>wahrscheinlich {{ result['AK'].upper() }}</b></h3>
+                                <p></p>
+                                <div class="content notification is-danger">
+                                    <p>
+                                        Sie sind wahrscheinlich mit SARS-CoV-2 infiziert gewesen. Um das Ergebnis zu bestätigen ist eine zweite
+                                        Blutentnahme erforderlich. Sie werden von uns zur Vereinbarung eines Termins zur Blutabnahme kontaktiert.
+                                    </p>
+                                    <p>
+                                        Bitte beachten Sie, dass dies nach bisherigem Wissensstand eine bestehende Infektion mit Covid-19 nicht sicher
+                                        ausschließt und keine Immunität vorausgesetzt werden kann. Bitte folgen Sie weiterhin
+                                        den allgemeinen Hinweisen zur Kontaktvermeidung.
+                                    </p>
+                                    <p>
+                                        Weiter Informationen des Gesundheitsamtes unter <a href="https://coronavirus.stuttgart.de">coronavirus.stuttgart.de</a>
+                                        und des RKI unter <a href="https://www.rki.de/covid-19">rki.de/covid-19</a>.
+                                    </p>
+                                </div>
+                            {% elif result['AK'] == 'negativ' %}
+                                <h3 class="title_alt is-3">Antikörper: <b>{{ result['AK'].upper() }}</b></h3>
+                                <p></p>
+                                <div class="content notification is-primary">
+                                    <p>
+                                        Es konnten keine IgA- und IgG-Antikörper gegen SARS-CoV-2 nachgewiesen werden. Sie haben wahrscheinlich
+                                        keine Covid-19 Erkrankung überstanden.
+                                    </p>
+                                    <p>
+                                        Bitte beachten Sie, dass dies eine bestehende Infektion mit Covid-19 nicht ausschließt und folgen Sie weiterhin
+                                        den allgemeinen Hinweisen zur Kontaktvermeidung.
+                                    </p>
+                                    <p>
+                                        Weiter Informationen des Gesundheitsamtes unter <a href="https://coronavirus.stuttgart.de">coronavirus.stuttgart.de</a>
+                                        und des RKI unter <a href="https://www.rki.de/covid-19">rki.de/covid-19</a>.
+                                    </p>
+                                </div>
+                            {% elif result['AK'] == 'unsicher' %}
+                                <h3 class="title_alt is-3">Antikörper: <b>nicht eindeutig</b></h3>
+                                <p></p>
+                                <div class="content notification is-warning">
+                                    <p>
+                                        Das Testergebnis ist nicht eindeutig und bedarf einer Kontrolle. Wir werden Sie zur Vereinbarung eines
+                                        Termins zur Blutabnahme aus einer Unterarmvene kontaktieren.
+                                    </p>
+                                    <p>
+                                        Bitte folgen Sie weiterhin den allgemeinen Hinweisen zur Kontaktvermeidung.
+                                    </p>
+                                    <p>
+                                        Weiter Informationen des Gesundheitsamtes unter <a href="https://coronavirus.stuttgart.de">coronavirus.stuttgart.de</a>
+                                        und des RKI unter <a href="https://www.rki.de/covid-19">rki.de/covid-19</a>.
+                                    </p>
+                                </div>
+                            {% endif %}
+                        {% else %}
                             <h3 class="title_alt is-3">Ihr Ergebnis: <b>nicht gefunden</b></h3>
                             <p></p>
                             <div class="content notification is-danger">
@@ -66,7 +102,7 @@
                             </div>
                         {% endif %}
                         <div class="notification">
-                            Bitte überprüfen Sie zur Ihrer Sicherheit nochmals den Abfragecode:<br>
+                            Bitte überprüfen Sie zu Ihrer Sicherheit nochmals den Abfragecode:<br>
                             {% if code and code_input and code.lower() != code_input.lower() %}
                                 {{ code_input }} entspricht intern
                             {% endif %}

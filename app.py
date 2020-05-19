@@ -212,16 +212,30 @@ def route_query():
             if 'CODE_CLEANUP' in app.config:
                 code_input = app.config['CODE_CLEANUP'](code_input)
             result = Result.query.get(b'0' + hashlib.pbkdf2_hmac(app.config['PBKDF2_HASH_FUNCTION'], code_input.encode(), app.config['PEPPER'], app.config['PBKDF2_ROUNDS']))
+            view_result = {}
             if result:
                 db.session.add(Access(token=token.token, Result=result))
+                view_result['found'] = True
                 logging.info('Providing result with hash %s and token %s', result.hash, token)
             else:
+                view_result['found'] = False
                 logging.warning('No result found with %s and token %s', code_input, token)
             token.used += 1
             db.session.commit()
-            observations = {x.identifier: x for x in result.Observations} if result else dict()
-            return render_template('result.html', result=result if result and result.result else observations.get('COV2PCE', None), observations=observations,
-                                   code=code_input, code_input=form.code.data.strip())
+            if result:
+                observations = {x.identifier: x for x in result.Observations}
+                view_result['PCR'] = result.result or observations.get('COV2PCE', None)
+                if view_result['PCR'] not in {'negativ', 'positiv'}:
+                    view_result['PCR'] = None
+                view_result['AK'] = None
+                if 'COVA' in observations and 'COVG' in observations:
+                    if float(observations['COVA'].result) < 0.8 and float(observations['COVG'].result) < 0.8:
+                        view_result['AK'] = 'negativ'
+                    elif float(observations['COVG'].result) >= 1.1:
+                        view_result['AK'] = 'positiv'
+                    else:
+                        view_result['AK'] = 'unsicher'
+            return render_template('result.html', result=view_result, code=code_input, code_input=form.code.data.strip())
     else:
         logging.debug('Form not validated code: %s and token: %s', form.code.data, form.token.data)
     return render_template('query.html', form=form, token_expired=token_expired, token_not_found=token_not_found)
