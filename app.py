@@ -219,8 +219,8 @@ def route_query():
                 logging.warning('No result found with %s and token %s', code_input, token)
             token.used += 1
             db.session.commit()
-            observations = {x.identifier: x for x in result.Observations}
-            return render_template('result.html', result=result if result.result else observations.get('COV2PCE', None), observations=observations,
+            observations = {x.identifier: x for x in result.Observations} if result else dict()
+            return render_template('result.html', result=result if result and result.result else observations.get('COV2PCE', None), observations=observations,
                                    code=code_input, code_input=form.code.data.strip())
     else:
         logging.debug('Form not validated code: %s and token: %s', form.code.data, form.token.data)
