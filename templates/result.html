@@ -9,7 +9,7 @@
                 </h1>
                 <div class="box">
                     <div class="field">
-                        {% if result['PCR'] or result['AK']  %}
+                        {% if result['PCR'] or result['AK'] %}
                             {% if result['PCR'] == 'positiv' %}
                                 <h3 class="title_alt is-3">Virus-RNA (akut): <b>{{ result['PCR'].upper() }}</b></h3>
                                 <p></p>
@@ -40,12 +40,13 @@
                                 <p></p>
                                 <div class="content notification is-danger">
                                     <p>
-                                        Sie sind wahrscheinlich mit SARS-CoV-2 infiziert gewesen. Um das Ergebnis zu bestätigen ist eine zweite
-                                        Blutentnahme erforderlich. Sie werden von uns zur Vereinbarung eines Termins zur Blutabnahme kontaktiert.
+                                        Bei Ihnen sind Antikörper gegen das neuartige Coronavirus (SARS-CoV-2) nachweisbar. Sofern eine Infektion
+                                        nicht bereits bekannt war, ist zur Bestätigung eine zweite Blutentnahme aus einer Unterarmvene erforderlich.
+                                        In diesem Fall werden Sie von uns zur Vereinbarung eines Termins zur Blutentnahme kontaktiert.
                                     </p>
                                     <p>
                                         Bitte beachten Sie, dass dies nach bisherigem Wissensstand eine bestehende Infektion mit Covid-19 nicht sicher
-                                        ausschließt und keine Immunität vorausgesetzt werden kann. Bitte folgen Sie weiterhin
+                                        ausschließt. Bitte folgen Sie weiterhin
                                         den allgemeinen Hinweisen zur Kontaktvermeidung.
                                     </p>
                                     <p>
@@ -58,8 +59,7 @@
                                 <p></p>
                                 <div class="content notification is-primary">
                                     <p>
-                                        Es konnten keine IgA- und IgG-Antikörper gegen SARS-CoV-2 nachgewiesen werden. Sie haben wahrscheinlich
-                                        keine Covid-19 Erkrankung überstanden.
+                                        Bei Ihnen sind keine Antikörper gegen das neuartige Coronavirus (SARS-CoV-2) nachweisbar.
                                     </p>
                                     <p>
                                         Bitte beachten Sie, dass dies eine bestehende Infektion mit Covid-19 nicht ausschließt und folgen Sie weiterhin
@@ -75,8 +75,9 @@
                                 <p></p>
                                 <div class="content notification is-warning">
                                     <p>
-                                        Das Testergebnis ist nicht eindeutig und bedarf einer Kontrolle. Wir werden Sie zur Vereinbarung eines
-                                        Termins zur Blutabnahme aus einer Unterarmvene kontaktieren.
+                                        Das Testergebnis ist nicht eindeutig. Sofern eine Infektion nicht bereits bekannt war, ist zur Kontrolle eine
+                                        zweite Blutentnahme aus einer Unterarmvene erforderlich. In diesem Fall werden Sie von uns zur Vereinbarung
+                                        eines Termins zur Blutentnahme aus einer Unterarmvene kontaktiert.
                                     </p>
                                     <p>
                                         Bitte folgen Sie weiterhin den allgemeinen Hinweisen zur Kontaktvermeidung.
