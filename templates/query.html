@@ -9,20 +9,34 @@
                 </h1>
                 <h2 class="subtitle">
                     Bitte nutzen Sie den Code, welchen Sie per Email oder SMS erhalten haben, und den Code vom Kurzbrief
-                    <a href="images/kurzbrief-code.jpg" target="_blank" class="high-link">(Beispielbrief)</a> aus der Fieberambulanz bzw. die Auftragsnummer für Mitarbeiter.
+                    <a href="images/kurzbrief-code.jpg" target="_blank" class="high-link">(Beispielbrief)</a> aus der Fieberambulanz bzw.
+                    die Auftragsnummer für Mitarbeiter oder <a href="images/beispiel-ak.jpg" target="_blank" class="high-link">Teilnehmer
+                    der Antikörperstudie CoKoS in Stuttgart</a>.
                 </h2>
                 <div class="box">
                     <form method="POST">
                         <div class="field">
                             <label class="label">Code aus Kurzbrief Fieberambulanz / Auftragsnummer</label>
                             <p class="control is-expanded">
-                                {{ form.code(class='input', placeholder='6F9619FF-8B86-D011-B42D-00C04FC964FF', maxlength='36', required='') }}
+                                {{ form.code(class='input', placeholder='6F9619FF-8B86-D011-B42D-00C04FC964FF oder 65787363', maxlength='36', required='') }}
                             </p>
                         </div>
                         {% if token_not_found or form.code.errors %}
 
                             <div class="notification is-danger">
-                                Bitte überprüfen Sie die Eingabe des Codes aus dem Kurzbrief.
+                                {% if do_not_use_pseudonym %}
+                                    <p>
+                                        Sie können Ihr Ergebnis aus der Antikörperstudie CoKoS nicht mit dem Pseudonym abrufen.
+                                        Sie benötigen die achtstellige Auftragsnummer.
+                                    </p>
+                                    <p>
+                                        Diese finden Sie auf dem Aufkleber, welcher
+                                        unten auf dem Infoflyer aufgebracht ist:
+                                        <a href="images/beispiel-ak.jpg" target="_blank" class="high-link">Beispiel</a>
+                                    </p>
+                                {% else %}
+                                    Bitte überprüfen Sie die Eingabe des Codes aus dem Kurzbrief bzw. die Auftragsnummer.
+                                {% endif %}
                             </div>
                         {% endif %}
                         <div class="field">

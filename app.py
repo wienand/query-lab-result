@@ -193,6 +193,7 @@ def route_query():
     form = RequestResultForm(request.form or request.args)
     token_expired = False
     token_not_found = False
+    do_not_use_pseudonym = False
     if form.validate_on_submit():
         logging.debug('Form validated, trying to access result %s with %s', form.code.data, form.token.data)
         if not max_total_query_requests:
@@ -207,7 +208,7 @@ def route_query():
             logging.warning('Token expired for result %s with %s: %s', form.code.data, form.token.data, token)
             token_expired = True
         else:
-            # TODO: Move to configuration prior to commit
+            # TODO: Move to configuration for more flexibility
             code_input = form.code.data
             if 'CODE_CLEANUP' in app.config:
                 code_input = app.config['CODE_CLEANUP'](code_input)
@@ -237,8 +238,9 @@ def route_query():
                         view_result['AK'] = 'unsicher'
             return render_template('result.html', result=view_result, code=code_input, code_input=form.code.data.strip())
     else:
+        do_not_use_pseudonym = form.code.data and re.search(r'\D\D\d\d\D\D\d\d', form.code.data) and len(form.code.data) < 12
         logging.debug('Form not validated code: %s and token: %s', form.code.data, form.token.data)
-    return render_template('query.html', form=form, token_expired=token_expired, token_not_found=token_not_found)
+    return render_template('query.html', form=form, token_expired=token_expired, token_not_found=token_not_found, do_not_use_pseudonym=do_not_use_pseudonym)
 
 
 @app.route('/import', methods=['POST'])
